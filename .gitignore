@@ -1,0 +1,18 @@
+node_modules/
+.expo/
+ios/
+android/
+build/
+*.log
+.DS_Store
+.ported
+
+# 単語データの平文（暗号化した content.enc だけを登録する）
+*/data/words.json
+
+# 署名・鍵
+*.p12
+*.p8
+*.mobileprovision
+*.ipa
+*.hex
