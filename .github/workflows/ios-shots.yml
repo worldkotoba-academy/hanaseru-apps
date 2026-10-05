@@ -136,11 +136,16 @@ jobs:
             maestro --device "$U" hierarchy > "$GITHUB_WORKSPACE/shots/hierarchy-$kind.json" 2>/dev/null || true
             xcrun simctl terminate "$U" "$BID" || true
             out="$RUNNER_TEMP/out-$kind"; mkdir -p "$out"; cd "$out"
+            # takeScreenshot の保存先は Maestro の版で違う（作業フォルダ・手順ファイルの隣・テスト出力）ので、撮る前に消して撮った後に探す
+            find "$GITHUB_WORKSPACE/maestro" "$out" "$HOME/.maestro" -name 'shot-*.png' -delete 2>/dev/null || true
             for try in 1 2; do
-              if maestro --device "$U" test "$FLOW"; then break; fi
+              if maestro --device "$U" test --test-output-dir "$out" "$FLOW"; then break; fi
               echo "Maestro が失敗（$try 回目）"
             done
-            for i in 1 2 3 4 5 6; do cp "shot-$i.png" "$GITHUB_WORKSPACE/shots/$kind-$i.png" || true; done
+            for i in 1 2 3 4 5 6; do
+              f=$(find "$out" "$GITHUB_WORKSPACE/maestro" "$HOME/.maestro" -name "shot-$i.png" 2>/dev/null | head -1)
+              if [ -n "$f" ]; then cp "$f" "$GITHUB_WORKSPACE/shots/$kind-$i.png"; else echo "shot-$i.png が見つからない"; fi
+            done
             cd "$GITHUB_WORKSPACE"
             xcrun simctl shutdown "$U"
           done
