@@ -129,20 +129,29 @@ jobs:
             xcrun simctl spawn "$U" defaults write -g AppleLanguages -array ja
             xcrun simctl spawn "$U" defaults write -g AppleLocale ja_JP
             xcrun simctl install "$U" "$APP"
+            # 診断用：起動直後の画面と画面要素の一覧（Maestro の手順が合わないときに見る）
+            BID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist")
+            xcrun simctl launch "$U" "$BID"; sleep 15
+            xcrun simctl io "$U" screenshot "$GITHUB_WORKSPACE/shots/launch-$kind.png" || true
+            maestro --device "$U" hierarchy > "$GITHUB_WORKSPACE/shots/hierarchy-$kind.json" 2>/dev/null || true
+            xcrun simctl terminate "$U" "$BID" || true
             out="$RUNNER_TEMP/out-$kind"; mkdir -p "$out"; cd "$out"
             for try in 1 2; do
               if maestro --device "$U" test "$FLOW"; then break; fi
               echo "Maestro が失敗（$try 回目）"
             done
-            for i in 1 2 3 4 5 6; do cp "shot-$i.png" "$GITHUB_WORKSPACE/shots/$kind-$i.png"; done
+            for i in 1 2 3 4 5 6; do cp "shot-$i.png" "$GITHUB_WORKSPACE/shots/$kind-$i.png" || true; done
             cd "$GITHUB_WORKSPACE"
             xcrun simctl shutdown "$U"
           done
           ls -l "$GITHUB_WORKSPACE/shots"
 
       - name: Save screenshots
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: shots-${{ matrix.app.dir }}
-          path: shots/*.png
+          path: |
+            shots/*.png
+            shots/*.json
           retention-days: 3
