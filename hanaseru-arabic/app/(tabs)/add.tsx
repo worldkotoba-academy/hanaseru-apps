@@ -136,7 +136,7 @@ export default function AddWordScreen() {
             "アラビア語",
             wordText,
             setWordText,
-            "例: selamat pagi",
+            "例: مَرْحَبًا",
             true
           )}
           {renderInput(

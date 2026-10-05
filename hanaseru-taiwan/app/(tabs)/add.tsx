@@ -136,7 +136,7 @@ export default function AddWordScreen() {
             "台湾華語",
             wordText,
             setWordText,
-            "例: selamat pagi",
+            "例: 你好",
             true
           )}
           {renderInput(

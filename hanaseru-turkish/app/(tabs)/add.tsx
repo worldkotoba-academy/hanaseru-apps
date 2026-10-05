@@ -136,7 +136,7 @@ export default function AddWordScreen() {
             "トルコ語",
             wordText,
             setWordText,
-            "例: selamat pagi",
+            "例: Merhaba",
             true
           )}
           {renderInput(

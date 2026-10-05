@@ -136,7 +136,7 @@ export default function AddWordScreen() {
             "イタリア語",
             wordText,
             setWordText,
-            "例: selamat pagi",
+            "例: Ciao",
             true
           )}
           {renderInput(

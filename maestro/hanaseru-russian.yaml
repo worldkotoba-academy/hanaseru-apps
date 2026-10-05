@@ -3,39 +3,31 @@ appId: com.hanaserurussian.app
 - launchApp:
     clearState: true
 - extendedWaitUntil:
-    visible: "単語一覧"
-    timeout: 30000
+    visible: "単語一覧, tab.*"
+    timeout: 60000
 - waitForAnimationToEnd
 - takeScreenshot: shot-1
 - tapOn:
-    text: "здра́вствуйте"
-    index: 0
+    text: "^.{0,40}здра́вствуйте \\[.*"
 - waitForAnimationToEnd
 - takeScreenshot: shot-2
-- tapOn: "学習"
+- tapOn: "学習, tab.*"
 - waitForAnimationToEnd
 - takeScreenshot: shot-3
-- tapOn: "学習を開始する"
+- tapOn: "^.{0,6}学習を開始する.{0,6}$"
 - waitForAnimationToEnd
-- tapOn: "答えを見る"
+- tapOn: "^.{0,6}答えを見る.{0,6}$"
 - waitForAnimationToEnd
 - takeScreenshot: shot-4
 - launchApp
 - extendedWaitUntil:
-    visible: "単語一覧"
-    timeout: 30000
-- tapOn: "学習"
-- tapOn: "4択クイズ"
-- tapOn: "学習を開始する"
-- waitForAnimationToEnd
-- tapOn:
-    point: "50%,62%"
+    visible: "学習, tab.*"
+    timeout: 60000
+- tapOn: "学習, tab.*"
+- tapOn: "^.{0,6}4択クイズ.{0,6}$"
+- tapOn: "^.{0,6}学習を開始する.{0,6}$"
 - waitForAnimationToEnd
 - takeScreenshot: shot-5
-- launchApp
-- extendedWaitUntil:
-    visible: "単語一覧"
-    timeout: 30000
-- tapOn: "設定"
+- tapOn: "設定, tab.*"
 - waitForAnimationToEnd
 - takeScreenshot: shot-6

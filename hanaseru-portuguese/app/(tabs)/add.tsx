@@ -136,7 +136,7 @@ export default function AddWordScreen() {
             "ポルトガル語",
             wordText,
             setWordText,
-            "例: selamat pagi",
+            "例: Olá",
             true
           )}
           {renderInput(
