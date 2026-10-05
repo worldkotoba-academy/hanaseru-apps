@@ -1,0 +1,41 @@
+appId: com.hanaseruarabic.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "単語一覧"
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: shot-1
+- tapOn:
+    text: "سَلَام"
+    index: 0
+- waitForAnimationToEnd
+- takeScreenshot: shot-2
+- tapOn: "学習"
+- waitForAnimationToEnd
+- takeScreenshot: shot-3
+- tapOn: "学習を開始する"
+- waitForAnimationToEnd
+- tapOn: "答えを見る"
+- waitForAnimationToEnd
+- takeScreenshot: shot-4
+- launchApp
+- extendedWaitUntil:
+    visible: "単語一覧"
+    timeout: 30000
+- tapOn: "学習"
+- tapOn: "4択クイズ"
+- tapOn: "学習を開始する"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%,62%"
+- waitForAnimationToEnd
+- takeScreenshot: shot-5
+- launchApp
+- extendedWaitUntil:
+    visible: "単語一覧"
+    timeout: 30000
+- tapOn: "設定"
+- waitForAnimationToEnd
+- takeScreenshot: shot-6

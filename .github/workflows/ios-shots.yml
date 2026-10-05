@@ -1,0 +1,148 @@
+name: iOS Screenshots
+
+# ストア用スクリーンショットをシミュレータで撮る（実際のアプリの画面）。
+# Release をシミュレータ向けにビルドし（JS は同梱されるので Metro は不要）、Maestro で操作して撮影する。
+# 操作手順は maestro/<app>.yaml（_hanaseru_tools/real_shots.py flows が生成）。
+# 撮った PNG は数日だけ artifact に置く（ストアで公開する画面なので公開して差し支えない）。.ipa は作らない。
+
+on:
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: '撮影するアプリ（カンマ区切り。例: hanaseru-german,hanaseru-italian）'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      list: ${{ steps.s.outputs.list }}
+    steps:
+      - id: s
+        env:
+          IN: ${{ github.event.inputs.apps }}
+        run: |
+          python3 - <<'PY' >> $GITHUB_OUTPUT
+          import json, os, re
+          apps = [x.strip() for x in os.environ["IN"].split(",") if x.strip()]
+          assert apps and all(re.fullmatch(r"hanaseru-[a-z]+", a) for a in apps), apps
+          print("list=" + json.dumps([{"dir": a} for a in apps]))
+          PY
+
+  shots:
+    needs: matrix
+    runs-on: macos-26
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.matrix.outputs.list) }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.app.dir }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Unseal word data
+        working-directory: .
+        env:
+          CONTENT_KEY: ${{ secrets.CONTENT_KEY }}
+        run: bash tools/unseal.sh "${{ matrix.app.dir }}" && test -s "${{ matrix.app.dir }}/data/words.json"
+
+      - name: Select Xcode 26
+        run: |
+          XCODE_PATH=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -v beta | sort -Vr | head -1)
+          [ -n "$XCODE_PATH" ] || XCODE_PATH=/Applications/Xcode.app
+          sudo xcode-select -switch "$XCODE_PATH/Contents/Developer"
+          echo "DEVELOPER_DIR=$XCODE_PATH/Contents/Developer" >> $GITHUB_ENV
+          xcodebuild -version
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: false
+
+      - name: Install CocoaPods
+        run: gem install cocoapods --no-document
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Expo prebuild
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Pod install
+        run: cd ios && pod install
+
+      - name: Patch fmt headers for Xcode 26 Clang strictness
+        run: |
+          for header in ios/Pods/fmt/include/fmt/base.h ios/Pods/fmt/include/fmt/core.h ios/Pods/fmt/include/fmt/format.h; do
+            [ -f "$header" ] || continue
+            sed -i.bak 's/# *define FMT_CONSTEVAL consteval/#define FMT_CONSTEVAL constexpr/g' "$header"
+          done
+          for f in ios/Pods/Target\ Support\ Files/fmt/fmt.*.xcconfig; do
+            [ -f "$f" ] || continue
+            printf '\n// fmt Xcode 26 consteval workaround (CI patch)\nGCC_PREPROCESSOR_DEFINITIONS = $(inherited) FMT_USE_CONSTEVAL=0\nCLANG_CXX_LANGUAGE_STANDARD = gnu++17\n' >> "$f"
+          done
+
+      - name: Build Release for simulator
+        run: |
+          WS=$(ls -d ios/*.xcworkspace | head -1); SCHEME=$(basename "$WS" .xcworkspace)
+          xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Release -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/dd" \
+            CODE_SIGNING_ALLOWED=NO build | tail -20
+          test ${PIPESTATUS[0]} -eq 0
+
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Shoot
+        env:
+          FLOW: ${{ github.workspace }}/maestro/${{ matrix.app.dir }}.yaml
+        run: |
+          set -euo pipefail
+          APP=$(ls -d "$RUNNER_TEMP"/dd/Build/Products/Release-iphonesimulator/*.app | head -1)
+          RT=$(xcrun simctl list runtimes -j | python3 -c "import json,sys; r=[x for x in json.load(sys.stdin)['runtimes'] if x['platform']=='iOS' and x['isAvailable']]; print(sorted(r, key=lambda x: [int(p) for p in x['version'].split('.')])[-1]['identifier'])")
+          pick() { xcrun simctl list devicetypes -j | python3 -c "import json,sys; d=[x for x in json.load(sys.stdin)['devicetypes'] if '$1' in x['name']]; print(d[-1]['identifier'])"; }
+          mkdir -p "$GITHUB_WORKSPACE/shots"
+          for dev in "iphone:iPhone 17 Pro Max" "ipad:iPad Pro 13-inch"; do
+            kind=${dev%%:*}; name=${dev#*:}
+            DT=$(pick "$name" || pick "${name%% *}")
+            U=$(xcrun simctl create "shot-$kind" "$DT" "$RT")
+            xcrun simctl boot "$U"; xcrun simctl bootstatus "$U" -b
+            xcrun simctl ui "$U" appearance light
+            xcrun simctl status_bar "$U" override --time 9:41 --dataNetwork wifi --wifiMode active --wifiBars 3 \
+              --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
+            xcrun simctl spawn "$U" defaults write -g AppleLanguages -array ja
+            xcrun simctl spawn "$U" defaults write -g AppleLocale ja_JP
+            xcrun simctl install "$U" "$APP"
+            out="$RUNNER_TEMP/out-$kind"; mkdir -p "$out"; cd "$out"
+            for try in 1 2; do
+              if maestro --device "$U" test "$FLOW"; then break; fi
+              echo "Maestro が失敗（$try 回目）"
+            done
+            for i in 1 2 3 4 5 6; do cp "shot-$i.png" "$GITHUB_WORKSPACE/shots/$kind-$i.png"; done
+            cd "$GITHUB_WORKSPACE"
+            xcrun simctl shutdown "$U"
+          done
+          ls -l "$GITHUB_WORKSPACE/shots"
+
+      - name: Save screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: shots-${{ matrix.app.dir }}
+          path: shots/*.png
+          retention-days: 3
