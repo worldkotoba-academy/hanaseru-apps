@@ -136,20 +136,20 @@ export default function AddWordScreen() {
             "ロシア語",
             wordText,
             setWordText,
-            "例: Привет",
+            "例: Здравствуйте",
             true
           )}
           {renderInput(
             "カタカナ発音",
             pronunciation,
             setPronunciation,
-            "例: スラマッ パギ"
+            "例: ズドラーストヴィチェ"
           )}
           {renderInput(
             "日本語の意味",
             meaning,
             setMeaning,
-            "例: おはようございます",
+            "例: こんにちは",
             true
           )}
 
@@ -246,7 +246,7 @@ export default function AddWordScreen() {
             "日本語訳",
             exampleJa,
             setExampleJa,
-            "例: おはようございます、お元気ですか？",
+            "例: こんにちは、お元気ですか？",
             false,
             true
           )}
@@ -254,7 +254,7 @@ export default function AddWordScreen() {
             "英語訳",
             english,
             setEnglish,
-            "例: Good morning, how are you?",
+            "例: Hello, how are you?",
             false,
             true
           )}

@@ -1,0 +1,33 @@
+appId: com.hanaseruchinese.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "単語一覧, tab.*"
+    timeout: 60000
+- waitForAnimationToEnd
+- takeScreenshot: shot-1
+- tapOn:
+    text: "^.{0,40}的 \\[.*"
+- waitForAnimationToEnd
+- takeScreenshot: shot-2
+- tapOn: "学習, tab.*"
+- waitForAnimationToEnd
+- takeScreenshot: shot-3
+- tapOn: "^.{0,6}学習を開始する.{0,6}$"
+- waitForAnimationToEnd
+- tapOn: "^.{0,6}答えを見る.{0,6}$"
+- waitForAnimationToEnd
+- takeScreenshot: shot-4
+- launchApp
+- extendedWaitUntil:
+    visible: "学習, tab.*"
+    timeout: 60000
+- tapOn: "学習, tab.*"
+- tapOn: "^.{0,6}4択クイズ.{0,6}$"
+- tapOn: "^.{0,6}学習を開始する.{0,6}$"
+- waitForAnimationToEnd
+- takeScreenshot: shot-5
+- tapOn: "設定, tab.*"
+- waitForAnimationToEnd
+- takeScreenshot: shot-6

@@ -312,7 +312,7 @@ export default function SettingsScreen() {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: colors.textMuted }]}>
-            Kata Belajar v1.0.0
+            話せる中国語 v1.0.1
           </Text>
           <Text style={[styles.footerText, { color: colors.textMuted }]}>
             音声: iOS ネイティブTTS

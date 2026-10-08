@@ -76,7 +76,7 @@ export default function WordListScreen() {
         {/* Hero Banner */}
         <View style={[styles.heroBanner, { backgroundColor: colors.primary }]}>
           <View style={styles.heroContent}>
-            <Text style={styles.heroTitle}>Kata Belajar</Text>
+            <Text style={styles.heroTitle}>話せる中国語</Text>
             <Text style={styles.heroSubtitle}>
               中国語単語帳 — {words.length.toLocaleString()}語収録
             </Text>
