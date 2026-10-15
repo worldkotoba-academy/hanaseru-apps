@@ -1,0 +1,29 @@
+name: iOS voices
+
+# iOS シミュレータの読み上げの声（AVSpeechSynthesisVoice）を一覧にする。アプリのビルドは無し。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  voices:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: List voices
+        run: |
+          set -euo pipefail
+          XCODE_PATH=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -v beta | sort -Vr | head -1)
+          [ -n "$XCODE_PATH" ] || XCODE_PATH=/Applications/Xcode.app
+          sudo xcode-select -switch "$XCODE_PATH/Contents/Developer"
+          RT=$(xcrun simctl list runtimes -j | python3 -c "import json,sys; r=[x for x in json.load(sys.stdin)['runtimes'] if x['platform']=='iOS' and x['isAvailable']]; print(sorted(r, key=lambda x: [int(p) for p in x['version'].split('.')])[-1]['identifier'])")
+          echo "runtime $RT"
+          DT=$(xcrun simctl list devicetypes -j | python3 -c "import json,sys; d=[x for x in json.load(sys.stdin)['devicetypes'] if 'iPhone' in x['name']]; print(d[-1]['identifier'])")
+          U=$(xcrun simctl create voices "$DT" "$RT")
+          xcrun simctl boot "$U"; xcrun simctl bootstatus "$U" -b
+          ARCH=$(uname -m)
+          xcrun -sdk iphonesimulator swiftc -target "$ARCH-apple-ios17.0-simulator" tools/voices.swift -o "$RUNNER_TEMP/voices"
+          xcrun simctl spawn "$U" "$RUNNER_TEMP/voices"
