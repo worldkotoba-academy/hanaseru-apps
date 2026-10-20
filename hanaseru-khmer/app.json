@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "話せるクメール語",
+    "slug": "hanaseru-khmer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "scheme": "hanaseru-khmer",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#032EA1"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hanaserukhmer.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "CFBundleDisplayName": "話せるクメール語",
+        "CFBundleDevelopmentRegion": "ja",
+        "CFBundleLocalizations": [
+          "ja"
+        ],
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": []
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": []
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#032EA1"
+      },
+      "package": "com.hanaserukhmer.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id-here"
+      }
+    }
+  }
+}
